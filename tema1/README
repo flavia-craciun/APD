@@ -1,0 +1,70 @@
+// CRACIUN FLAVIA - MARIA
+// 336CA
+
+----- TEMA 1 -----
+
+* Repartizarea fisierelor *
+Am inceput prin a extrage argumentele primite in linia de comanda si a le pastra
+in variabile specifice: numarul de mapperi, reduceri si fisierul din care
+urmeaza sa fie extrase numele fisierelor de intrare.
+
+Am construit un vector cu fisierele pe care ulterior l-am sortat in functie de
+dimensiunea acestora, iar apoi le-am intercalat astfel incat dupa fisierul cel mai
+mare sa se afle intotdeauna fisierul cel mai mic corespondent. Astfel desi fiecare
+thread ia un numar egal de fisiere (ceea ce nu ofera o scalabilitate prea buna),
+cel putin atunci cand diferentele de dimensiune nu sunt atat de mari intre fisierele
+mari si cele mici, acestea vor fi prelucrate intr-un timp aproximativ asemanator.
+
+* Pornirea thread-urilor *
+Pentru pornirea thread-urilor am creat trei structuri de date. Prima structura contine 
+campurilor necesare unui Mapper adica, printre altele, id-ul, un vector cu
+fisierele care au fost asignate thread-ului respectiv pentru a fi prelucrate si
+un map in care vor fi retinute listele partiale cu numere si puterile lor.
+
+A doua structura de date este structura specifica unui Reducer si contine campuri
+ce corespund id-ului, exponentului pentru care se va crea lista agregata, o lista in
+care se va retine acea lista agregata si un pointer la vectorul de mapperi, pentru a
+putea accesa informatiile acestora.
+
+A treia structura de date este reprezentata de o structure generala, care este folosita
+in pornirea si oprirea reducerilor si a mapperilor simultan. Astfel fiecare mapper si
+reducer este trimis ca fiind o structura generala, diferenta dintre ele facandu-se prin
+campul type al structurii general. In functie de cazul pe care ne aflam (mapper sau
+reducer), in structura este initializat campul obiectului respectiv.
+
+* Mapper *
+In functia apelata de thread-uri se incepe prin a se face distinctia intre mapperi
+si reduceri intrucat acestia trebuie sa indeplineasca functii diferite. Astfel, in
+functie de tipul thread-ului este folosita referinta/obiectul corespunzatoare/or tipului
+necesar.
+
+In cazul unui Mapper, acesta deschide pe rand fiecare fisier din vectorul de fisiere
+asignat si pentru fiecare numar citit din acesta va verifica daca acesta este 1, caz in
+care il adauga in lista partiala a fiecarui exponent. Altfel, daca numarul difera de 0,
+se va apela o functie de cautare binara care pentru fiecare exponent va incerca sa gaseasca
+baza prin a carei ridicare la exponentul dat sa rezulte numarul extras din fisier.
+Daca o baza a fost gasita, este adaugat o noua intrare in map-ul Mapper-ului de forma
+<exponent, lista<numere>>, unde numarul extras din fisier este adaugat in lista
+corespunzatoare exponentului.
+
+Astfel, la finalul parcurgerii fisierelor asignate, fiecare Mapper va avea un
+map cu listele partiale formate din exponentul si numerele corespunzatoare acestuia.
+
+* Reducer *
+Pentru a ma asigura ca toti Mapperii si-au terminat treaba inainte ca Reducerii sa o
+inceapa am utilizat o bariera care asteapta toate threadurile, inainte sa porneasca
+Reducerii.
+
+Un Reducer va folosi pointerul catre mapperi pentru a itera prin acestia, iar apoi in
+functie de exponentul care a fost asignat reducer-ului, acesta va extrage din map-ul
+fiecarui Mapper, lista de numere corespunzatoare exponentului. Reducerul va crea o noua
+lista agregata cu toate listele partiale ale aceluiasi exponent extrase si combinate.
+
+Odata obtinuta, lista agregata este sortata si sunt eliminate valorile duplicate.
+La final, fiecare Reducer creaza un fisier de iesire corespunzator exponentului
+pe care l-a prelucrat si afiseaza dimensiunea listei agregate in acesta.
+
+PS: am incercat ca impartirea fisierelor sa o fac dinamic cu o stiva pe care sa
+o imparta threadurile si sa folosesc un mutex care sa restrictioneze accesul
+threadurilor pe rand, insa dintr-un motiv necunoscut, un singur thread facea toata
+munca, asa ca am facut repartizarea static pana la urma
