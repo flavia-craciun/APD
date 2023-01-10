@@ -1,0 +1,36 @@
+// CRACIUN FLAVIA - MARIA
+// 336CA
+
+----- TEMA 2 -----
+
+* Tema2 *
+Aceasta clasa este folosita ca punctul de pornire al programului. Aici sunt
+create caile catre fisierele de iesire si writerii pentru acestea, este creat un
+ConcurrentHashmap in care se vor pune informatiile despre comenzi (id si nr produse)
+si un ExecutorService cu P workeri (unde P e nr maxim de threaduri permise pe un
+nivel). Tot aici, sunt pornite cele P threaduri de nivel 1, care au rolul de a
+citi fiserul cu comenzile (orders.txt). La final, se asteapta terminarea
+threadurilor de nivel 1 inainte de inchiderea celor doua fisiere de iesire si
+oprirea ExecutorService-ului.
+
+* OrdersWorker *
+Pentru paralelizarea citirii fisierului de comenzi, threadurile de nivel 1 folosesc
+acelasi BufferReader, astfel parcurgand impreuna fisierul o singura data. Cand un
+thread termina de prelucrat o comanda, acesta va prelua urmatoarea comanda care
+urmeaza sa fie citita de reader. Informatiile citite de pe fiecare rand sunt adaugate
+in ConcurrentHashmap pentru comenzile care au nr de produse mai mare decat 0. Ulterior,
+pentru fiecare comanda este creat cate un reader si in pool este adaugat un nr de
+taskuri echivalent cu nr de produse din comanda. De asemenea, este creat un
+CountDownLatch care va tine threadul de nivel 1 in asteptare, pana cand threadurile
+de nivel 2 vor termina de expediat toate produsele. In momentul in care threadurile
+de nivel 2 isi termina treaba, threadul de nivel 1 va verifica daca toate produsele
+au fost expediate si va expedia comanda.
+
+* ProductsWorker *
+Folosind un mecanism de citire similar cu threadurile de nivel 1, threadurile
+de nivel 2 folosesc si ele acelasi reader pentru a parcurge fiserul cu produse
+(order_products.txt) o singura dat per comanda. In momentul in care un worker de
+nivel 2 gaseste un produs corespunzator comenzii de care se ocupa, acesta marcheaza
+produsul ca fiind expediat si decrementeaza latchul. In momentul in care fisierul va
+fi parcurs in intregime si toate produsele vor fi expediate, latchul va avea valoarea 0,
+ceea ce va face ca threadul de nivel 1 sa iasa din asteptare.
