@@ -1,0 +1,50 @@
+// CRACIUN FLAVIA - MARIA
+// 336CA
+
+----- TEMA 3 -----
+
+C0- coord cluster 0
+C1 - coord cluster 1
+C2 - coord cluster 2
+C3 - coord cluster 3
+
+* Main *
+Initial programul fusese facut pentru topologia inel, dar dupa ce am citit
+taskul 3 am schimbat anumite parti de cod pentru a putea fi testat direct
+cazul cu legatura lipsa. De aceea si pentru taskul 0 si pentru taskul 1
+programul va rula la fel.
+
+* Topology *
+Vom incepe prin aflarea topologiei complete. Avand in vedere lipsa
+legaturii C0 - C1, C0 va citi fisierul corespunzator subproceselor sale si il
+va trimite mai departe catre C3. C3 isi va completa topologia cu informatiile
+primite si cu informatiile proprii. Analog C3 ii va trimite topologia sa lui C2
+si C2 lui C1. Astfel, C1 va detine acum topologia completa.
+
+Dupa aflare topologiei, aceasta va fi distribuita catre toate procesele si
+subprocesele. Astfel, C1 va trimite informatia sa catre toti workerii sai si
+catre C2. Analog, C2 va trimite topolgia subproceselor sale si lui C3, iar C3
+va trimite workerilor sai si lui C0. Dupa ce C0 va distribui si el topologia
+proceselor sale worker, toate procesele din cele patru clustere vor detine
+topologia completa. 
+
+* Array Calculations *
+Vom incepe de la procesul C0 care va crea vectorul cu dimensiunea dorita si
+care va calcula aproximativ cate operatii va face fiecare worker (dim_vec / nr_subproc).
+Apoi, C0 va trimite fiecaruia din workerii sai intervalul din vector de care
+se va ocupa in efectuarea calculelor. Dupa aceea, va trimite noul vector catre
+urmatorul proces, in acest caz C3. Analog C3, C2 si C1 vor trimite workerilor lor
+partea din vector de care se vor ocupa si apoi vor trimite vectorul modificat
+catre urmatorul proces coordonator. In final, C1 va detine vectorul modificat
+aproape in intregime.
+
+Din cauza impartirii initiale, vom ramane cu (dim_vec % nr_subproc) elemente din
+vector nemodificate. De aceea, la parcurgerea inversa a legaturilor pentru a
+transmite vectorul modificat inapoi la C0 (si a-l modifica in intregime),
+fiecare cluster coordontor va mai trimite o data catre workerii sai vectorul
+si indicele casutei pe care o va modifica. Astfel, C2 va primi vectorul modificat
+partial de la C1 si il va trimite catre workerii sai. Fiecare din workeri va
+modifica un element, iar noul vector va fi trimis mai departe. Daca pe parcursul
+traseului vetorul este modificat in intregime, workerii nu vor mai schimba nimic.
+In final, vectorul cu elementele obtinute in urma efectuarii calculelor se va
+intoarce la C0, unde va fi afisat de procesul coordonator.
